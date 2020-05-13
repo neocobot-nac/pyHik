@@ -944,7 +944,7 @@ class pyHik:
             Get last error.
 
         Exception:
-            NeoError.
+            HikError.
         """
         error = NET_DVR_UNKNOW
         try:
@@ -965,7 +965,7 @@ class pyHik:
             Initialize the SDK. Call this function before using any of the other APIs
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_INITIALIZE = _HCNetSDK.NET_DVR_Init
@@ -983,7 +983,7 @@ class pyHik:
             Release the SDK. If init() was called, invoke this function at program exit
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_CLEANUP = _HCNetSDK.NET_DVR_Cleanup
@@ -1008,7 +1008,7 @@ class pyHik:
             dwTryTimes : Number of attempts for connection
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_SET_CONNECT_TIME = _HCNetSDK.NET_DVR_SetConnectTime
@@ -1034,7 +1034,7 @@ class pyHik:
             enableReconnect : Enable or disable reconnect function, 0-disable, 1-enable(default)
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_SET_CONNECT_TIME = _HCNetSDK.NET_DVR_SetReconnect
@@ -1072,7 +1072,7 @@ class pyHik:
             dInfo : Device info
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_LOGIN = _HCNetSDK.NET_DVR_Login_V30
@@ -1103,7 +1103,7 @@ class pyHik:
             userId : User ID, returned from login()
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_LOGOUT = _HCNetSDK.NET_DVR_Logout
@@ -1132,7 +1132,7 @@ class pyHik:
             userId : User ID, returned from login()
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_GET_DVR_CONFIG = _HCNetSDK.NET_DVR_GetDVRConfig
@@ -1162,7 +1162,7 @@ class pyHik:
             channel : Analog channel number
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_GET_DVR_CONFIG = _HCNetSDK.NET_DVR_GetDVRConfig
@@ -1208,7 +1208,7 @@ class pyHik:
             lRealHandle : live view handle for use in stopRealPlay()
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_REALPLAY = _HCNetSDK.NET_DVR_RealPlay_V30
@@ -1245,7 +1245,7 @@ class pyHik:
             realHandle : live view handle, return value from startRealPlay()
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_STOP_REALPLAY = _HCNetSDK.NET_DVR_StopRealPlay
@@ -1272,7 +1272,7 @@ class pyHik:
             nPort : return value for PlayM4 SDK
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_GET_REALPLAYER_INDEX = _HCNetSDK.NET_DVR_GetRealPlayerIndex
@@ -1301,7 +1301,7 @@ class pyHik:
             dwUser : User data, Set 0.
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_GET_REALPLAYER_INDEX = _HCNetSDK.NET_DVR_SetRealDataCallBack
@@ -1329,7 +1329,7 @@ class pyHik:
             fileName   : file name of the frame recording.
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_SAVE_REAL_DATA = _HCNetSDK.NET_DVR_SaveRealData
@@ -1353,7 +1353,7 @@ class pyHik:
             realHandle : live view handle, return value from startRealPlay()
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_STOP_SAVE_REAL_DATA = _HCNetSDK.NET_DVR_StopSaveRealData
@@ -1381,7 +1381,7 @@ class pyHik:
             fileName   : file name of the picture capture.
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_CAPTURE_PICTURE = _HCNetSDK.NET_DVR_CapturePicture
@@ -1413,7 +1413,7 @@ class pyHik:
             fileName   : file name of the picture capture.
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_CAPTURE_JPEG_PICTURE = _HCNetSDK.NET_DVR_CaptureJPEGPicture
@@ -1447,7 +1447,7 @@ class pyHik:
             dwPresetIndex   : Preset index
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_PTZ_PRESET = _HCNetSDK.NET_DVR_PTZPreset
@@ -1476,7 +1476,7 @@ class pyHik:
             dwPresetIndex   : Preset index
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_PTZ_PRESET_OTHER = _HCNetSDK.NET_DVR_PTZPreset_Other
@@ -1507,7 +1507,7 @@ class pyHik:
             wInput          : input value base on different Cruise command, e.q. preset, time, speed
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_PTZ_PRESET = _HCNetSDK.NET_DVR_PTZCruise
@@ -1540,7 +1540,7 @@ class pyHik:
             wInput          : input value base on different Cruise command, e.q. preset, time, speed
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_PTZ_CRUISE_OTHER = _HCNetSDK.NET_DVR_PTZCruise_Other
@@ -1565,7 +1565,7 @@ class pyHik:
             dwPTZTrackCmd   : Track command
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_PTZ_TRACK = _HCNetSDK.NET_DVR_PTZTrack
@@ -1592,7 +1592,7 @@ class pyHik:
             dwPTZTrackCmd   : Track command
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_PTZ_TRACK_OTHER = _HCNetSDK.NET_DVR_PTZTrack_Other
@@ -1619,7 +1619,7 @@ class pyHik:
             dwStop          : Start - 0, Stop - 1
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_PTZ_CONTROL = _HCNetSDK.NET_DVR_PTZControl
@@ -1648,7 +1648,7 @@ class pyHik:
             dwStop          : Start - 0, Stop - 1
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_PTZ_CONTROL_OTHER = _HCNetSDK.NET_DVR_PTZControl_Other
@@ -1677,7 +1677,7 @@ class pyHik:
             dwSpeed         : Speed, range 1-7
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_PTZ_CONTROL_WITH_SPEED = _HCNetSDK.NET_DVR_PTZControlWithSpeed
@@ -1708,7 +1708,7 @@ class pyHik:
             dwSpeed         : Speed, range 1-7
 
         Exception:
-            NeoError.
+            HikError.
         """
         try:
             C_PTZ_CONTROL_WITH_SPEED_OTHER = _HCNetSDK.NET_DVR_PTZControlWithSpeed_Other
