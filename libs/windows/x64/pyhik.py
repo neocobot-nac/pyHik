@@ -287,7 +287,7 @@ class pyHik:
 
             dwReturned = pointer(DWORD())
             ret = C_GET_DVR_CONFIG(LONG(lUserID), DWORD(dwCommand), LONG(lChannel), lpOutBuffer,
-                                   DWORD(lpOutBuffer.__sizeof__()), dwReturned)
+                                   DWORD(sizeof(lpOutBuffer)), dwReturned)
         except Exception as err:
             raise HikError("NET_DVR_GetDVRConfig", NET_DVR_UNKNOW, "Executing Failed with error: %s" % str(err))
 
@@ -325,7 +325,7 @@ class pyHik:
             C_GET_DVR_GET_DEVICE_CONFIG.restype = BOOL
 
             ret = C_GET_DVR_GET_DEVICE_CONFIG(LONG(lUserID), DWORD(dwCommand), DWORD(dwCount), byref(lpInBuffer),
-                                              DWORD(lpInBuffer.__sizeof__()), byref(lpStatusList),
+                                              DWORD(sizeof(lpInBuffer)), byref(lpStatusList),
                                               byref(lpOutBuffer), DWORD(dwOutBufferSize))
         except Exception as err:
             raise HikError("NET_DVR_GetDeviceConfig", NET_DVR_UNKNOW, "Executing Failed with error: %s" % str(err))
@@ -366,6 +366,7 @@ class pyHik:
                 C_REALPLAY_V30.argtypes = [LONG, LPNET_DVR_CLIENTINFO, fRealDataCallBack_V30, VOIDP, BOOL]
                 fCallBack = fRealDataCallBack_V30(fCallBack)
             else:
+                pass
                 C_REALPLAY_V30.argtypes = [LONG, LPNET_DVR_CLIENTINFO, VOIDP, VOIDP, BOOL]
             C_REALPLAY_V30.restype = LONG
 
@@ -1014,7 +1015,7 @@ class pyHik:
             C_REMOTE_CONTROL = _HCNetSDK.NET_DVR_RemoteControl
             C_REMOTE_CONTROL.argtypes = [LONG, DWORD, VOIDP, DWORD]
             C_REMOTE_CONTROL.restype = BOOL
-            ret = C_REMOTE_CONTROL(LONG(lUserID), LONG(dwCommand), byref(lpInBuffer), DWORD(lpInBuffer.__sizeof__()))
+            ret = C_REMOTE_CONTROL(LONG(lUserID), LONG(dwCommand), byref(lpInBuffer), DWORD(sizeof(lpInBuffer)))
         except Exception as err:
             raise HikError("NET_DVR_RemoteControl", NET_DVR_UNKNOW, "Executing Failed with error: %s" % str(err))
 
@@ -1025,17 +1026,16 @@ class pyHik:
     ####################################################
     ### ISAPI                                        ###
     ####################################################
-    def STD_XML_config(
+    def NET_DVR_STDXMLConfig(
             self,
-            userId,
-            url,
-            buffer,
-            timeout):
+            lUserID,
+            lpInputParam,
+            lpOutputParam):
         """
             PTZ track controller.
 
         Parameters:
-            userId          : User ID, returned from login()
+            lUserID         : User ID, returned from login()
             lpInputParam    : Input parameters
             lpOutputParam   : Output parameters
 
@@ -1046,45 +1046,23 @@ class pyHik:
             C_STD_XML_CONFIG = _HCNetSDK.NET_DVR_STDXMLConfig
             C_STD_XML_CONFIG.argtypes = [LONG, LPNET_DVR_XML_CONFIG_INPUT, LPNET_DVR_XML_CONFIG_OUTPUT]
             C_STD_XML_CONFIG.restype = BOOL
-
-            lpInputParam = NET_DVR_XML_CONFIG_INPUT()
-            lpInputParam.dwSize = lpInputParam.__sizeof__()
-            lpInputParam.lpRequestUrl = bytes(url, encoding='utf8')
-            lpInputParam.dwRequestUrlLen = len(url)
-            lpInputParam.lpOutBuffer = bytes(buffer, encoding='utf8')
-            lpInputParam.dwOutBufferSize = len(buffer)
-            lpInputParam.dwRecvTimeOut = timeout
-
-            lpOutputParam = NET_DVR_XML_CONFIG_OUTPUT()
-
-            ret = C_STD_XML_CONFIG(LONG(userId), byref(lpInputParam), byref(lpOutputParam))
+            ret = C_STD_XML_CONFIG(LONG(lUserID), byref(lpInputParam), byref(lpOutputParam))
         except Exception as err:
-            raise HikError("STD_XML_config", NET_DVR_UNKNOW, "Executing Failed with error: %s" % str(err))
+            raise HikError("NET_DVR_STDXMLConfig", NET_DVR_UNKNOW, "Executing Failed with error: %s" % str(err))
 
         if not ret:
-            raise HikError("STD_XML_config", self.__NET_DVR_GetLastError(), "Executing failed")
+            raise HikError("NET_DVR_STDXMLConfig", self.__NET_DVR_GetLastError(), "Executing failed")
 
-        return self.__struct2dict(lpOutputParam)
-
-    def __struct2dict(
-            self,
-            struct):
-        """
-        Convert a structure to a dict
-        """
-        try:
-            _sf = struct._fields_
-            _dict = {}
-            for (_fn, _ft) in _sf:
-                _v = struct.__getattribute__(_fn)
-                if (type(_v)) != int:
-                    _v = str(cast(_v, CHARP).value, "utf-8")
-                _dict[_fn] = _v
-            return _dict
-        except Exception as err:
-            return {}
 
 if __name__ == "__main__":
+    import time
+
+    def callback(lRealHandle, dwDataType, pBuffer, dwBufSize, pUser):
+        print("callback")
+
+
+
+
     pyhik = pyHik()
     pyhik.NET_DVR_Init()
 
@@ -1100,6 +1078,35 @@ if __name__ == "__main__":
     # pyhik.NET_DVR_GetDVRConfig(userID, NET_DVR_GET_DECODERCFG_V40, devInfo.byStartChan, devConfig)
     # print(devConfig)
 
-    # print(pyhik.get_decoder_config(userID))
+    lpClientInfo = NET_DVR_CLIENTINFO()
+    lpClientInfo.lChannel = devInfo.byStartChan
+    lpClientInfo.lLinkMode = 0
+    lpClientInfo.hPlayWnd = 0
+    lpClientInfo.byProtoType = 0
 
+    lRealHandle = pyhik.NET_DVR_RealPlay_V30(userID, lpClientInfo, callback, 0, False)
+    time.sleep(10)
+
+    pyhik.NET_DVR_StopRealPlay(lRealHandle)
+
+
+
+    # buffer = ""
+    # lpInputParam = NET_DVR_XML_CONFIG_INPUT()
+    # lpInputParam.dwSize = sizeof(lpInputParam)
+    # lpInputParam.lpRequestUrl = cast(CHARP(bytes("GET /ISAPI/PTZCtrl/channels/1/presets", encoding='utf8')), VOIDP)
+    # lpInputParam.dwRequestUrlLen = 256
+    # lpInputParam.dwRecvTimeOut = 3000
+    #
+    # lpOutputParam = NET_DVR_XML_CONFIG_OUTPUT()
+    # lpOutputParam.dwSize = sizeof(lpOutputParam)
+    # lpOutputParam.lpOutBuffer = cast(CHARP(bytes(buffer, encoding='utf8')), VOIDP)
+    # lpOutputParam.dwOutBufferSize = 1024*1024
+    #
+    # pyhik.NET_DVR_STDXMLConfig(userID, lpInputParam, lpOutputParam)
+    #
+    # print(str(cast(lpOutputParam.lpOutBuffer, CHARP).value))
+    # print(str(lpOutputParam.dwReturnedXMLSize))
+
+    pyhik.NET_DVR_Logout(userID)
     pyhik.NET_DVR_Cleanup()
