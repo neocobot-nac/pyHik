@@ -320,18 +320,60 @@ class pyHik:
             HikError.
         """
         try:
-            C_GET_DVR_GET_DEVICE_CONFIG = _HCNetSDK.NET_DVR_GetDeviceConfig
-            C_GET_DVR_GET_DEVICE_CONFIG.argtypes = [LONG, DWORD, DWORD, VOIDP, DWORD, VOIDP, VOIDP, DWORD]
-            C_GET_DVR_GET_DEVICE_CONFIG.restype = BOOL
+            C_GET_DEVICE_CONFIG = _HCNetSDK.NET_DVR_GetDeviceConfig
+            C_GET_DEVICE_CONFIG.argtypes = [LONG, DWORD, DWORD, VOIDP, DWORD, VOIDP, VOIDP, DWORD]
+            C_GET_DEVICE_CONFIG.restype = BOOL
 
-            ret = C_GET_DVR_GET_DEVICE_CONFIG(LONG(lUserID), DWORD(dwCommand), DWORD(dwCount), byref(lpInBuffer),
-                                              DWORD(sizeof(lpInBuffer)), byref(lpStatusList),
-                                              byref(lpOutBuffer), DWORD(dwOutBufferSize))
+            ret = C_GET_DEVICE_CONFIG(LONG(lUserID), DWORD(dwCommand), DWORD(dwCount), byref(lpInBuffer),
+                                      DWORD(sizeof(lpInBuffer)), byref(lpStatusList),
+                                      byref(lpOutBuffer), DWORD(dwOutBufferSize))
         except Exception as err:
             raise HikError("NET_DVR_GetDeviceConfig", NET_DVR_UNKNOW, "Executing Failed with error: %s" % str(err))
 
         if not ret:
             raise HikError("NET_DVR_GetDeviceConfig", self.__NET_DVR_GetLastError(), "Executing failed")
+
+
+    ####################################################
+    ### 设备能力集                                   ###
+    ####################################################
+    def NET_DVR_GetDeviceAbility(
+            self,
+            lUserID,
+            dwAbilityType,
+            pInBuf,
+            dwInLength,
+            pOutBuf,
+            dwOutLength):
+
+        """
+            批量获取设备配置信息（带发送数据）。
+
+        Parameters:
+            lUserID         : NET_DVR_Login_V40等登录接口的返回值
+            dwAbilityType   : 能力类型
+            pInBuf          : 输入缓冲区指针
+            dwInLength      : 输入缓冲区的长度
+            pOutBuf         : 输出缓冲区指针
+            dwOutLength     : 接收数据的缓冲区的长度
+
+        Exception:
+            HikError.
+        """
+        try:
+            C_GET_DEVICE_ABILITY = _HCNetSDK.NET_DVR_GetDeviceAbility
+            C_GET_DEVICE_ABILITY.argtypes = [LONG, DWORD, CHARP, DWORD, CHARP, DWORD]
+            C_GET_DEVICE_ABILITY.restype = BOOL
+
+            ret = C_GET_DEVICE_ABILITY(LONG(lUserID), DWORD(dwAbilityType),
+                                       CHARP(bytes(pInBuf, encoding='utf8')), DWORD(len(pInBuf)),
+                                       CHARP(bytes(pOutBuf, encoding='utf8')), DWORD(len(pOutBuf)))
+        except Exception as err:
+            raise HikError("NET_DVR_GetDeviceAbility", NET_DVR_UNKNOW, "Executing Failed with error: %s" % str(err))
+
+        if not ret:
+            raise HikError("NET_DVR_GetDeviceAbility", self.__NET_DVR_GetLastError(), "Executing failed")
+
 
     ####################################################
     ### 实时预览                                      ###
@@ -445,6 +487,11 @@ class pyHik:
             fCallBack   : 码流数据回调函数
             dwUser      : 用户数据
 
+        Remarks:
+            fCallBack回调函数中不能执行可能会占用时间较长的接口或操作，不建议调用该SDK（HCNetSDK.dll）本身的接口。
+            此函数包括开始和停止用户处理SDK捕获的数据, 当回调函数cbRealDataCallBack设为非NULL值时，表示回调和处理数据,当设为NULL时表示停止回调和处理数据。
+            回调的第一个包是40个字节的文件头，供后续解码使用，之后回调的是压缩的码流。回调数据最大为256K字节。
+
         Exception:
             HikError.
         """
@@ -469,6 +516,11 @@ class pyHik:
         Parameters:
             lRealHandle : NET_DVR_RealPlay或NET_DVR_RealPlay_V30的返回值
             sFileName   : 文件路径指针，包括文件名，例如："D:\\test.mp4"
+
+        Remarks:
+            V5.0.3.2或以后版本，通过该接口保存录像，保存的录像文件数据超过文件最大限制字节数（默认为1024MB）
+            SDK会自动切片，即新建文件进行保存，文件名命名规则为在接口传入的文件名基础上增加数字标识(例如：*_1.mp4、*_2.mp4)”。
+            可以调用NET_DVR_GetSDKLocalCfg、NET_DVR_SetSDKLocalCfg(配置类型：NET_DVR_LOCAL_CFG_TYPE_GENERAL)获取和设置切片模式和文件最大限制字节数。
 
         Exception:
             HikError.
@@ -765,6 +817,13 @@ class pyHik:
             dwStop          : 云台停止动作或开始动作：0－开始，1－停止
             dwSpeed         : 云台控制的速度，用户按不同解码器的速度控制值设置。取值范围[1,7]
 
+        Remarks:
+            对云台实施的每一个动作都需要调用该接口两次，分别是开始和停止控制，由接口中的最后一个参数（dwStop）决定。在调用此接口之前需要先注册设备。
+            与设备之间的云台各项操作的命令都对应于设备与云台之间的控制码，设备会根据目前设置的解码器种类和解码器地址向云台发送控制码。
+            如果目前设备上设置的解码器与云台设备的不匹配，需要重新配置设备的解码器。
+            如果云台设备所需的解码器设备不支持，则无法用该接口控制。
+            而通过NET_DVR_PTZControlWithSpeed_Other控制云台，设备接收到控制命令后直接返回成功。
+
         Exception:
             HikError.
         """
@@ -1001,7 +1060,6 @@ class pyHik:
         Parameters:
             lUserID      : NET_DVR_Login_V40等登录接口的返回值
             dwCommand    : 控制命令
-            *NET_DVR_CONTROL_PTZ_PATTERN  快球云台花样扫描
             lpInBuffer   : 输入参数，具体内容跟控制命令相关
 
         Remarks:
@@ -1035,7 +1093,7 @@ class pyHik:
             PTZ track controller.
 
         Parameters:
-            lUserID          : User ID, returned from login()
+            lUserID         : User ID, returned from login()
             lpInputParam    : Input parameters
             lpOutputParam   : Output parameters
 
@@ -1053,31 +1111,12 @@ class pyHik:
         if not ret:
             raise HikError("NET_DVR_STDXMLConfig", self.__NET_DVR_GetLastError(), "Executing failed")
 
-    def __struct2dict(
-            self,
-            struct):
-        """
-        Convert a structure to a dict
-        """
-        try:
-            _sf = struct._fields_
-            _dict = {}
-            for (_fn, _ft) in _sf:
-                _v = struct.__getattribute__(_fn)
-                if (type(_v)) != int:
-                    _v = str(cast(_v, CHARP).value, "utf-8")
-                _dict[_fn] = _v
-            return _dict
-        except Exception as err:
-            return {}
 
 if __name__ == "__main__":
     import time
 
     def callback(lRealHandle, dwDataType, pBuffer, dwBufSize, pUser):
         print("callback")
-
-
 
 
     pyhik = pyHik()
