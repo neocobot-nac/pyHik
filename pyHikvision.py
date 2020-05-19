@@ -1,4 +1,6 @@
 import platform
+from xml.dom.minidom import parseString
+
 sysstr = platform.system()
 sysbit = platform.architecture()[0]
 if sysstr == 'Windows':
@@ -32,7 +34,7 @@ class Hikvision():
 
     @property
     def realHandles(self):
-        return self.__realHandles
+        return list(self.__realHandles.values())
 
     ####################################################
     ### 初始化与连接设置                              ###
@@ -116,7 +118,7 @@ class Hikvision():
         userID = self.__pyhik.NET_DVR_Login_V30(ip, port, username, password, devInfo)
         if userID not in self.__userIDs:
             self.__userIDs.append(userID)
-            self.__devInfo[userID] = devInfo
+            self.__devInfo[userID] = self.__struct2dict(devInfo)
         return userID
 
 
@@ -206,41 +208,43 @@ class Hikvision():
             HikError.
         """
 
-        lpClientInfo = NET_DVR_CLIENTINFO()
-        lpClientInfo.lChannel = self.__devInfo[userID]["byStartChan"]
-        lpClientInfo.lLinkMode = linkMode
-        lpClientInfo.hPlayWnd = playWND
-        lpClientInfo.byProtoType = protoType
+        lRealHandle = -1
+        if userID not in self.__realHandles.keys():
+            lpClientInfo = NET_DVR_CLIENTINFO()
+            lpClientInfo.lChannel = self.__devInfo[userID]["byStartChan"]
+            lpClientInfo.lLinkMode = linkMode
+            lpClientInfo.hPlayWnd = playWND
+            lpClientInfo.byProtoType = protoType
 
-        lRealHandle = self.__pyhik.NET_DVR_RealPlay_V30(userID, lpClientInfo, callbackFunc, userData, blocked)
-        if lRealHandle not in self.__realHandles:
+            lRealHandle = self.__pyhik.NET_DVR_RealPlay_V30(userID, lpClientInfo, callbackFunc, userData, blocked)
             self.__realHandles[userID] = lRealHandle
         return lRealHandle
 
-    def stop_realplay(self, realHandle = None):
+    def stop_realplay(self, userID = None):
         """
             停止数据捕获。
 
         Parameters:
-            lRealHandle : 预览句柄， 设置为None时，将全部已开启播放的设备全部登出。
+            userID : 用户ID号
 
         Exception:
             HikError.
         """
 
-        if realHandle is None:
-            realHandle = self.__realHandles
+        if userID is None:
+            userID = list(self.__realHandles.keys())
         else:
-            realHandle = [realHandle]
+            userID = [userID]
 
-        for handle in realHandle:
+        for id in userID:
             try:
-                self.__pyhik.NET_DVR_StopRealPlay(handle)
+                if id in self.__realHandles.keys():
+                    self.__pyhik.NET_DVR_StopRealPlay(self.__realHandles[id])
             except Exception as err:
                 pass
             finally:
-                if handle in self.__realHandles:
-                    self.__realHandles.pop(handle)
+                if id in self.__realHandles.keys():
+                    self.__realHandles.pop(id)
 
     def get_realplay_index(self, realHandle):
         """
@@ -419,7 +423,7 @@ class Hikvision():
             HikError.
         """
 
-        if userID in self.__realHandles:
+        if userID in self.__realHandles.keys():
             if speed is not None:
                 self.__pyhik.NET_DVR_PTZControlWithSpeed(self.__realHandles[userID], command, isStopped, speed)
             else:
@@ -451,7 +455,7 @@ class Hikvision():
             HikError.
         """
 
-        if userID in self.__realHandles:
+        if userID in self.__realHandles.keys():
             self.__pyhik.NET_DVR_PTZPreset(self.__realHandles[userID], command, index)
         else:
             self.__pyhik.NET_DVR_PTZPreset_Other(userID, self.__devInfo[userID]["pyStartChan"], command, index)
@@ -467,21 +471,37 @@ class Hikvision():
         Exception:
             HikError.
         """
-
-        buffer = ""
+        MAX_BUFFER_SIZE = 1024*300
+        url = "GET /ISAPI/PTZCtrl/channels/1/presets"
+        buffer = " " * MAX_BUFFER_SIZE
         lpInputParam = NET_DVR_XML_CONFIG_INPUT()
         lpInputParam.dwSize = sizeof(lpInputParam)
-        lpInputParam.lpRequestUrl = cast(CHARP(bytes("GET /ISAPI/PTZCtrl/channels/1/presets", encoding='utf8')), VOIDP)
-        lpInputParam.dwRequestUrlLen = 256
+        lpInputParam.lpRequestUrl = cast(CHARP(bytes(url, encoding='utf8')), VOIDP)
+        lpInputParam.dwRequestUrlLen = len(url)
         lpInputParam.dwRecvTimeOut = timeout
 
         lpOutputParam = NET_DVR_XML_CONFIG_OUTPUT()
         lpOutputParam.dwSize = sizeof(lpOutputParam)
         lpOutputParam.lpOutBuffer = cast(CHARP(bytes(buffer, encoding='utf8')), VOIDP)
-        lpOutputParam.dwOutBufferSize = 1024*300
+        lpOutputParam.dwOutBufferSize = MAX_BUFFER_SIZE
 
         self.__pyhik.NET_DVR_STDXMLConfig(userID, lpInputParam, lpOutputParam)
 
+        presetList = []
+        try:
+            xmlMsg = parseString(str(cast(lpOutputParam.lpOutBuffer, CHARP).value, encoding="utf8"))
+            rootNode = xmlMsg.documentElement
+            PTZPresetNodes = rootNode.getElementsByTagName("PTZPreset")
+            for node in PTZPresetNodes:
+                IDElement = node.getElementsByTagName("id")
+                if IDElement:
+                    id = IDElement[0].childNodes[0].data
+                    if id not in presetList:
+                        presetList.append(int(id))
+        except Exception as Error:
+            print(Error)
+        finally:
+            return presetList
 
 
     ####################################################
@@ -506,7 +526,7 @@ class Hikvision():
             HikError.
         """
 
-        if userID in self.__realHandles:
+        if userID in self.__realHandles.keys():
             self.__pyhik.NET_DVR_PTZCruise(self.__realHandles[userID], command, route, point, input)
         else:
             self.__pyhik.NET_DVR_PTZCruise_Other(userID, self.__devInfo[userID]["pyStartChan"], command, route, point, input)
@@ -530,7 +550,7 @@ class Hikvision():
         Exception:
             HikError.
         """
-        if userID in self.__realHandles:
+        if userID in self.__realHandles.keys():
             self.__pyhik.NET_DVR_PTZTrack(self.__realHandles[userID], command)
         else:
             self.__pyhik.NET_DVR_PTZTrack_Other(userID, self.__devInfo[userID]["pyStartChan"], command)

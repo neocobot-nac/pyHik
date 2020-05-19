@@ -1,7 +1,7 @@
 import win32api
 from ctypes import WinDLL
 
-from pyHik.libs.windows.argsdef import *
+from ..argsdef import *
 
 __curdir__ = os.path.abspath(os.path.dirname(__file__))
 
