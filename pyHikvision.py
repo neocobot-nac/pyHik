@@ -30,11 +30,21 @@ class Hikvision():
 
     @property
     def userIDs(self):
+        if len(self.__userIDs) == 1:
+            return self.__userIDs[0]
         return self.__userIDs
 
-    @property
-    def realHandles(self):
-        return list(self.__realHandles.values())
+    def devInfo(self, userID = None):
+        if userID is None:
+            return self.__devInfo
+        else:
+            return self.__devInfo[userID]
+
+    def realHandles(self, userID = None):
+        if userID is None:
+            return self.__realHandles
+        else:
+            return self.__realHandles[userID]
 
     ####################################################
     ### 初始化与连接设置                              ###
@@ -135,16 +145,19 @@ class Hikvision():
 
         if userID is None:
             userID = self.__userIDs
-        else:
+
+        if not isinstance(userID, list):
             userID = [userID]
 
         for id in userID:
             try:
+                if id in self.__realHandles:
+                    self.stop_realplay(id)
                 self.__pyhik.NET_DVR_Logout(id)
             except Exception as err:
                 pass
             finally:
-                if userID in self.__userIDs:
+                if id in self.__userIDs:
                     self.__userIDs.remove(id)
                     self.__devInfo.pop(id)
 
@@ -180,8 +193,8 @@ class Hikvision():
             HikError.
         """
 
-        decoderConfig = NET_DVR_DECODERCFG_V40()
-        self.__pyhik.NET_DVR_GetDVRConfig(userID, NET_DVR_GET_IPPARACFG_V40, channel, decoderConfig)
+        decoderConfig = NET_DVR_DECODERCFG_V30()
+        self.__pyhik.NET_DVR_GetDVRConfig(userID, NET_DVR_GET_DECODERCFG_V30, channel, decoderConfig)
         return self.__struct2dict(decoderConfig)
 
 
