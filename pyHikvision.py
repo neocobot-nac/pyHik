@@ -357,7 +357,7 @@ class Hikvision():
 
         self.__pyhik.NET_DVR_SetCapturePictureMode(captureMode)
 
-        if timeout is not None:
+        if timeout is None:
             self.__pyhik.NET_DVR_CapturePicture(realHandle, picFileName)
         else:
             self.__pyhik.NET_DVR_CapturePictureBlock(realHandle, picFileName, timeout)
