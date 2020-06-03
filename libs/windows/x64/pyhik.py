@@ -34,39 +34,56 @@ class HikError(Exception):
 ########################################################################################################################
 ########################################################################################################################
 _HCCore = _zlib1 = _YUVProcess = _SuperRender = _ssleay32 = _PlayCtrl = \
-    _NPQos = _libmmd = _libeay32 = _HXVA = _hpr = _hlog = _GdiPlus = _AudioRender = None
+    _NPQos = _libmmd = _libeay32 = _HXVA = _hpr = _hlog = _GdiPlus = _AudioRender = _MP_Render = _EagleEyeRender = None
 
 _HCNetSDK = None
 
 def create():
     global _HCCore, _zlib1, _YUVProcess, _SuperRender, _ssleay32, _PlayCtrl, \
-        _NPQos, _libmmd, _libeay32, _HXVA, _hpr, _hlog, _GdiPlus, _AudioRender
+        _NPQos, _libmmd, _libeay32, _HXVA, _hpr, _hlog, _GdiPlus, _AudioRender, _MP_Render, _EagleEyeRender
     global _HCNetSDK
 
-    # _AudioRender = cdll.LoadLibrary(os.path.join(os.getcwd(), 'AudioRender.dll'))
-    # _GdiPlus = cdll.LoadLibrary(os.path.join(os.getcwd(), 'GdiPlus.dll'))
-    # _hlog = cdll.LoadLibrary(os.path.join(os.getcwd(), 'hlog.dll'))
-    # _hpr = cdll.LoadLibrary(os.path.join(os.getcwd(), 'hpr.dll'))
-    # _HXVA = cdll.LoadLibrary(os.path.join(os.getcwd(), 'HXVA.dll'))
-    # _libeay32 = cdll.LoadLibrary(os.path.join(os.getcwd(), 'libeay32.dll'))
-    # _libmmd = cdll.LoadLibrary(os.path.join(os.getcwd(), 'libmmd.dll'))
-    # _NPQos = cdll.LoadLibrary(os.path.join(os.getcwd(), 'NPQos.dll'))
-    # _PlayCtrl = cdll.LoadLibrary(os.path.join(os.getcwd(), 'PlayCtrl.dll'))
-    # _ssleay32 = cdll.LoadLibrary(os.path.join(os.getcwd(), 'ssleay32.dll'))
-    # _SuperRender = cdll.LoadLibrary(os.path.join(os.getcwd(), 'SuperRender.dll'))
-    # _YUVProcess = cdll.LoadLibrary(os.path.join(os.getcwd(), 'YUVProcess.dll'))
-    # _zlib1 = cdll.LoadLibrary(os.path.join(os.getcwd(), 'zlib1.dll'))
     _HCCore = WinDLL(os.path.join(__curdir__, 'HCCore.dll'))
     _HCNetSDK = WinDLL(os.path.join(__curdir__, 'HCNetSDK.dll'))
-
+    _hpr = WinDLL(os.path.join(__curdir__, 'hpr.dll'))
+    _hlog = WinDLL(os.path.join(__curdir__, 'hlog.dll'))
+    _AudioRender = WinDLL(os.path.join(__curdir__, 'AudioRender.dll'))
+    _GdiPlus = WinDLL(os.path.join(__curdir__, 'GdiPlus.dll'))
+    _HXVA = WinDLL(os.path.join(__curdir__, 'HXVA.dll'))
+    _libeay32 = WinDLL(os.path.join(__curdir__, 'libeay32.dll'))
+    _libmmd = WinDLL(os.path.join(__curdir__, 'libmmd.dll'))
+    _NPQos = WinDLL(os.path.join(__curdir__, 'NPQos.dll'))
+    _ssleay32 = WinDLL(os.path.join(__curdir__, 'ssleay32.dll'))
+    _SuperRender = WinDLL(os.path.join(__curdir__, 'SuperRender.dll'))
+    _YUVProcess = WinDLL(os.path.join(__curdir__, 'YUVProcess.dll'))
+    _zlib1 = WinDLL(os.path.join(__curdir__, 'zlib1.dll'))
+    _PlayCtrl = WinDLL(os.path.join(__curdir__, 'PlayCtrl.dll'))
+    # _EagleEyeRender = WinDLL(os.path.join(__curdir__, 'EagleEyeRender.dll'))
+    # _MP_Render = WinDLL(os.path.join(__curdir__, 'MP_Render.dll'))
 
 def destory():
     global _HCCore, _zlib1, _YUVProcess, _SuperRender, _ssleay32, _PlayCtrl, \
-        _NPQos, _libmmd, _libeay32, _HXVA, _hpr, _hlog, _GdiPlus, _AudioRender
+        _NPQos, _libmmd, _libeay32, _HXVA, _hpr, _hlog, _GdiPlus, _AudioRender, _MP_Render, _EagleEyeRender
     global _HCNetSDK
 
+    # win32api.FreeLibrary(_MP_Render._handle)
+    # win32api.FreeLibrary(_EagleEyeRender._handle)
+    win32api.FreeLibrary(_PlayCtrl._handle)
+    win32api.FreeLibrary(_zlib1._handle)
+    win32api.FreeLibrary(_YUVProcess._handle)
+    win32api.FreeLibrary(_SuperRender._handle)
+    win32api.FreeLibrary(_ssleay32._handle)
+    win32api.FreeLibrary(_NPQos._handle)
+    win32api.FreeLibrary(_libmmd._handle)
+    win32api.FreeLibrary(_libeay32._handle)
+    win32api.FreeLibrary(_HXVA._handle)
+    win32api.FreeLibrary(_GdiPlus._handle)
+    win32api.FreeLibrary(_AudioRender._handle)
+    win32api.FreeLibrary(_hlog._handle)
+    win32api.FreeLibrary(_hpr._handle)
     win32api.FreeLibrary(_HCNetSDK._handle)
     win32api.FreeLibrary(_HCCore._handle)
+
 
 ####################################################
 ### API function declarations                    ###
